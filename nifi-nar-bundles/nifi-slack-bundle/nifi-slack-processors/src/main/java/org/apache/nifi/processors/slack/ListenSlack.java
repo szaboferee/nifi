@@ -16,10 +16,7 @@
  */
 package org.apache.nifi.processors.slack;
 
-import com.github.seratch.jslack.api.rtm.RTMClient;
-
 import java.io.StringReader;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -31,10 +28,14 @@ import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
 
+import org.apache.nifi.annotation.behavior.InputRequirement;
+import org.apache.nifi.annotation.behavior.InputRequirement.Requirement;
 import org.apache.nifi.annotation.behavior.PrimaryNodeOnly;
 import org.apache.nifi.annotation.documentation.CapabilityDescription;
 import org.apache.nifi.annotation.documentation.Tags;
 import org.apache.nifi.annotation.lifecycle.OnScheduled;
+import org.apache.nifi.annotation.lifecycle.OnShutdown;
+import org.apache.nifi.annotation.lifecycle.OnUnscheduled;
 import org.apache.nifi.components.PropertyDescriptor;
 import org.apache.nifi.components.Validator;
 import org.apache.nifi.flowfile.FlowFile;
@@ -42,7 +43,6 @@ import org.apache.nifi.processor.AbstractSessionFactoryProcessor;
 import org.apache.nifi.processor.ProcessContext;
 import org.apache.nifi.processor.ProcessSession;
 import org.apache.nifi.processor.ProcessSessionFactory;
-import org.apache.nifi.processor.ProcessorInitializationContext;
 import org.apache.nifi.processor.Relationship;
 import org.apache.nifi.processor.exception.ProcessException;
 import org.apache.nifi.processors.slack.controllers.SlackConnectionService;
@@ -50,20 +50,21 @@ import org.apache.nifi.processors.slack.controllers.SlackConnectionService;
 @Tags({"slack", "RTM", "listen"})
 @CapabilityDescription("A Slack bot listening on the Real Time Messaging API.")
 @PrimaryNodeOnly
+@InputRequirement(Requirement.INPUT_FORBIDDEN)
 public class ListenSlack extends AbstractSessionFactoryProcessor {
 
   private volatile ProcessSessionFactory processSessionFactory;
   private SlackConnectionService slackConnectionService;
   
 
-  private static final PropertyDescriptor SLACK_CONNECTION_SERVICE = new PropertyDescriptor.Builder()
+  static final PropertyDescriptor SLACK_CONNECTION_SERVICE = new PropertyDescriptor.Builder()
     .name("slack-connection-service")
     .description("Slack Connection ControlleService")
     .required(true)
     .identifiesControllerService(SlackConnectionService.class)
     .build();
 
-  private static final PropertyDescriptor MESSAGE_TYPES = new PropertyDescriptor
+  static final PropertyDescriptor MESSAGE_TYPES = new PropertyDescriptor
     .Builder()
     .name("Message types")
     .description("Message types to listen to. It will filter messages with the given types or " +
@@ -72,12 +73,12 @@ public class ListenSlack extends AbstractSessionFactoryProcessor {
     .addValidator(Validator.VALID)
     .build();
 
-  private static final Relationship MATCHED_MESSAGES_RELATIONSHIP = new Relationship.Builder()
+  static final Relationship MATCHED_MESSAGES_RELATIONSHIP = new Relationship.Builder()
     .name("matched")
     .description("Incoming messages that matches the given types")
     .build();
 
-  private static final Relationship UNMATCHED_MESSAGES_RELATIONSHIP = new Relationship.Builder()
+  static final Relationship UNMATCHED_MESSAGES_RELATIONSHIP = new Relationship.Builder()
     .name("unmatched")
     .description("Incoming messages that does not match the given types")
     .autoTerminateDefault(true)
@@ -85,44 +86,43 @@ public class ListenSlack extends AbstractSessionFactoryProcessor {
 
   private static final String JSON_OBJECT_TYPE_KEY = "type";
 
-  private List<PropertyDescriptor> descriptors;
+  private static final List<PropertyDescriptor> DESCRIPTORS = Collections.unmodifiableList(Arrays.asList(
+    SLACK_CONNECTION_SERVICE, MESSAGE_TYPES));
 
-  private Set<Relationship> relationships;
+  private static final Set<Relationship> RELATIONSHIPS = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
+    MATCHED_MESSAGES_RELATIONSHIP, UNMATCHED_MESSAGES_RELATIONSHIP)));
 
-  private RTMClient rtm;
   private List<String> matchingTypes;
   private boolean matchAny;
 
   @Override
-  protected void init(final ProcessorInitializationContext context) {
-    final List<PropertyDescriptor> descriptors = new ArrayList<>();
-    descriptors.add(SLACK_CONNECTION_SERVICE);
-    descriptors.add(MESSAGE_TYPES);
-    this.descriptors = Collections.unmodifiableList(descriptors);
-
-    final Set<Relationship> relationships = new HashSet<>();
-    relationships.add(MATCHED_MESSAGES_RELATIONSHIP);
-    relationships.add(UNMATCHED_MESSAGES_RELATIONSHIP);
-    this.relationships = Collections.unmodifiableSet(relationships);
-  }
-
-
-
-  @Override
   public Set<Relationship> getRelationships() {
-    return this.relationships;
+    return RELATIONSHIPS;
   }
 
   @Override
   public final List<PropertyDescriptor> getSupportedPropertyDescriptors() {
-    return descriptors;
+    return DESCRIPTORS;
   }
 
   @OnScheduled
   public void onScheduled(final ProcessContext context) {
     String messageTypes = context.getProperty(MESSAGE_TYPES).getValue();
+    messageTypes = messageTypes == null ? "" : messageTypes;
     matchAny = messageTypes.isEmpty();
     matchingTypes = Arrays.asList(messageTypes.split(","));
+  }
+
+  @OnUnscheduled
+  @OnShutdown
+  protected void onUnscheduled() {
+    if (isProcessorRegisteredToService()) {
+      deregister();
+    }
+  }
+
+  private void deregister() {
+    slackConnectionService.deregisterProcessor(this);
   }
 
   @Override
@@ -136,7 +136,7 @@ public class ListenSlack extends AbstractSessionFactoryProcessor {
     context.yield();
   }
 
-  protected boolean isProcessorRegisteredToService() {
+  private boolean isProcessorRegisteredToService() {
     return slackConnectionService != null
       && slackConnectionService.isProcessorRegistered(this);
   }
