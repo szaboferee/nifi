@@ -173,15 +173,20 @@ public class FetchSlack extends AbstractProcessor {
     try {
       ArrayList<FlowFile> successfulResponses = new ArrayList<>();
       for (JsonObject file : filesToDownload) {
-        HttpUriRequest request = RequestBuilder.get().setUri(file.getString("url_private_download")).build();
+        String url = file.getString("url_private_download");
+
+        HttpUriRequest request = RequestBuilder.get().setUri(url).build();
         HttpResponse response = client.execute(request);
         int statusCode = response.getStatusLine().getStatusCode();
+
         if (inStatusCodeFamily(200, statusCode)) {
-          FlowFile responseFlowFile = session.create();
+          FlowFile responseFlowFile = session.create(requestFlowFile);
           session.write(responseFlowFile, out -> response.getEntity().writeTo(out));
-          Map<String, String> attributes = requestFlowFile.getAttributes();
-          attributes = fillAttributes(attributes, file, response);
+
+          Map<String, String> attributes = fillAttributes(requestFlowFile.getAttributes(), file, response);
           responseFlowFile = session.putAllAttributes(responseFlowFile, attributes);
+
+          session.getProvenanceReporter().fetch(responseFlowFile, url);
           successfulResponses.add(responseFlowFile);
         } else if (inStatusCodeFamily(100, statusCode)
           || inStatusCodeFamily(300, statusCode)
@@ -195,7 +200,7 @@ public class FetchSlack extends AbstractProcessor {
       }
 
       if (successfulResponses.size() == filesToDownload.size()) {
-        successfulResponses.forEach(flowFile -> session.transfer(flowFile, REL_RESPONSE));
+        session.transfer(successfulResponses, REL_RESPONSE);
         session.transfer(requestFlowFile, REL_SUCCESS_REQ);
       }
     } catch (IOException e) {

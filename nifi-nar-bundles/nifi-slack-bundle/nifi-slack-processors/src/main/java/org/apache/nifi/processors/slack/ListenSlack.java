@@ -162,6 +162,7 @@ public class ListenSlack extends AbstractSessionFactoryProcessor {
       try {
         FlowFile flowFile = session.create();
         session.write(flowFile, outputStream -> outputStream.write(message.getBytes()));
+        session.getProvenanceReporter().receive(flowFile, "slack");
 
         if (matches(message)) {
           session.transfer(flowFile, MATCHED_MESSAGES_RELATIONSHIP);
