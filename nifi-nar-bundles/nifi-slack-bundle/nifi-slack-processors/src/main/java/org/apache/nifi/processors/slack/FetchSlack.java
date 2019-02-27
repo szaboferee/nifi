@@ -154,10 +154,12 @@ public class FetchSlack extends AbstractProcessor {
       return;
     }
 
-    try (InputStream requestInputStream = session.read(requestFlowFile)) {
-      List<JsonObject> filesToDownload = collectFilesToDownload(requestInputStream);
-
-      if (filesToDownload.isEmpty()) {
+    try {
+      List<JsonObject> filesToDownload;
+      try (InputStream requestInputStream = session.read(requestFlowFile)) {
+        filesToDownload = collectFilesToDownload(requestInputStream);
+      }
+      if (filesToDownload == null || filesToDownload.isEmpty()) {
         session.transfer(requestFlowFile, REL_FAILURE);
       } else {
         downloadFiles(session, requestFlowFile, filesToDownload);

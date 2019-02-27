@@ -54,19 +54,25 @@ import org.apache.nifi.processors.slack.controllers.SlackConnectionService;
 public class ListenSlack extends AbstractSessionFactoryProcessor {
 
   private volatile ProcessSessionFactory processSessionFactory;
-  private SlackConnectionService slackConnectionService;
-  
+
+  private volatile SlackConnectionService slackConnectionService;
+
+  private volatile List<String> matchingTypes;
+
+  private volatile boolean matchAny;
 
   static final PropertyDescriptor SLACK_CONNECTION_SERVICE = new PropertyDescriptor.Builder()
     .name("slack-connection-service")
-    .description("Slack Connection ControlleService")
+    .displayName("Slack Connection ControllerService")
+    .description("A ControllerService that provides a connection to slack service.")
     .required(true)
     .identifiesControllerService(SlackConnectionService.class)
     .build();
 
   static final PropertyDescriptor MESSAGE_TYPES = new PropertyDescriptor
     .Builder()
-    .name("Message types")
+    .name("message-types")
+    .displayName("Message types")
     .description("Message types to listen to. It will filter messages with the given types or " +
       "listen to every type if empty. It is a coma separated list like: message,file_shared")
     .required(false)
@@ -92,9 +98,6 @@ public class ListenSlack extends AbstractSessionFactoryProcessor {
   private static final Set<Relationship> RELATIONSHIPS = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
     MATCHED_MESSAGES_RELATIONSHIP, UNMATCHED_MESSAGES_RELATIONSHIP)));
 
-  private List<String> matchingTypes;
-  private boolean matchAny;
-
   @Override
   public Set<Relationship> getRelationships() {
     return RELATIONSHIPS;
@@ -115,7 +118,7 @@ public class ListenSlack extends AbstractSessionFactoryProcessor {
 
   @OnUnscheduled
   @OnShutdown
-  protected void onUnscheduled() {
+  public void onUnscheduled() {
     if (isProcessorRegisteredToService()) {
       deregister();
     }
