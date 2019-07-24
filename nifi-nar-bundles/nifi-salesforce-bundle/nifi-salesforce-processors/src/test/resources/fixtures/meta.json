@@ -1,0 +1,56 @@
+{
+  "objectDescribe": {
+    "activateable": false,
+    "createable": true,
+    "custom": false,
+    "customSetting": false,
+    "deletable": true,
+    "deprecatedAndHidden": false,
+    "feedEnabled": true,
+    "hasSubtypes": false,
+    "isSubtype": false,
+    "keyPrefix": "001",
+    "label": "Account",
+    "labelPlural": "Accounts",
+    "layoutable": true,
+    "mergeable": true,
+    "mruEnabled": true,
+    "name": "Account",
+    "queryable": true,
+    "replicateable": true,
+    "retrieveable": true,
+    "searchable": true,
+    "triggerable": true,
+    "undeletable": true,
+    "updateable": true,
+    "urls": {
+      "compactLayouts": "/services/data/v46.0/sobjects/Account/describe/compactLayouts",
+      "rowTemplate": "/services/data/v46.0/sobjects/Account/{ID}",
+      "approvalLayouts": "/services/data/v46.0/sobjects/Account/describe/approvalLayouts",
+      "defaultValues": "/services/data/v46.0/sobjects/Account/defaultValues?recordTypeId&fields",
+      "listviews": "/services/data/v46.0/sobjects/Account/listviews",
+      "describe": "/services/data/v46.0/sobjects/Account/describe",
+      "quickActions": "/services/data/v46.0/sobjects/Account/quickActions",
+      "layouts": "/services/data/v46.0/sobjects/Account/describe/layouts",
+      "sobject": "/services/data/v46.0/sobjects/Account"
+    }
+  },
+  "recentItems": [
+    {
+      "attributes": {
+        "type": "Account",
+        "url": "/services/data/v46.0/sobjects/Account/0012p00002NlZRyAAN"
+      },
+      "Id": "0012p00002NlZRyAAN",
+      "Name": "teszt0"
+    },
+    {
+      "attributes": {
+        "type": "Account",
+        "url": "/services/data/v46.0/sobjects/Account/0012p00002Nn5aIAAR"
+      },
+      "Id": "0012p00002Nn5aIAAR",
+      "Name": "new1"
+    }
+  ]
+}

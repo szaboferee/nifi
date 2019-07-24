@@ -1,0 +1,49 @@
+{
+  "totalSize": 12,
+  "done": false,
+  "nextRecordsUrl": "/services/data/v46.0/query/nextQueryId",
+  "records": [
+    {
+      "attributes": {
+        "type": "Account",
+        "url": "/services/data/v46.0/sobjects/Account/0012p00002OV0hJAAT"
+      },
+      "Name": "GenePoint"
+    },
+    {
+      "attributes": {
+        "type": "Account",
+        "url": "/services/data/v46.0/sobjects/Account/0012p00002OV0hHAAT"
+      },
+      "Name": "United Oil & Gas, UK"
+    },
+    {
+      "attributes": {
+        "type": "Account",
+        "url": "/services/data/v46.0/sobjects/Account/0012p00002OV0hIAAT"
+      },
+      "Name": "United Oil & Gas, Singapore"
+    },
+    {
+      "attributes": {
+        "type": "Account",
+        "url": "/services/data/v46.0/sobjects/Account/0012p00002OV0h9AAD"
+      },
+      "Name": "Edge Communications"
+    },
+    {
+      "attributes": {
+        "type": "Account",
+        "url": "/services/data/v46.0/sobjects/Account/0012p00002OV0hAAAT"
+      },
+      "Name": "Burlington Textiles Corp of America"
+    },
+    {
+      "attributes": {
+        "type": "Account",
+        "url": "/services/data/v46.0/sobjects/Account/0012p00002OV0hBAAT"
+      },
+      "Name": "Pyramid Construction Inc."
+    }
+  ]
+}

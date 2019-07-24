@@ -1,0 +1,93 @@
+{
+  "totalSize": 12,
+  "done": true,
+  "records": [
+    {
+      "attributes": {
+        "type": "Account",
+        "url": "/services/data/v46.0/sobjects/Account/0012p00002OV0hJAAT",
+        "someNumber": 10,
+        "someArray": [1,2],
+        "someObject": {"key": "value"}
+      },
+      "Name": "GenePoint"
+    },
+    {
+      "attributes": {
+        "type": "Account",
+        "url": "/services/data/v46.0/sobjects/Account/0012p00002OV0hHAAT"
+      },
+      "Name": "United Oil & Gas, UK"
+    },
+    {
+      "attributes": {
+        "type": "Account",
+        "url": "/services/data/v46.0/sobjects/Account/0012p00002OV0hIAAT"
+      },
+      "Name": "United Oil & Gas, Singapore"
+    },
+    {
+      "attributes": {
+        "type": "Account",
+        "url": "/services/data/v46.0/sobjects/Account/0012p00002OV0h9AAD"
+      },
+      "Name": "Edge Communications"
+    },
+    {
+      "attributes": {
+        "type": "Account",
+        "url": "/services/data/v46.0/sobjects/Account/0012p00002OV0hAAAT"
+      },
+      "Name": "Burlington Textiles Corp of America"
+    },
+    {
+      "attributes": {
+        "type": "Account",
+        "url": "/services/data/v46.0/sobjects/Account/0012p00002OV0hBAAT"
+      },
+      "Name": "Pyramid Construction Inc."
+    },
+    {
+      "attributes": {
+        "type": "Account",
+        "url": "/services/data/v46.0/sobjects/Account/0012p00002OV0hCAAT"
+      },
+      "Name": "Dickenson plc"
+    },
+    {
+      "attributes": {
+        "type": "Account",
+        "url": "/services/data/v46.0/sobjects/Account/0012p00002OV0hDAAT"
+      },
+      "Name": "Grand Hotels & Resorts Ltd"
+    },
+    {
+      "attributes": {
+        "type": "Account",
+        "url": "/services/data/v46.0/sobjects/Account/0012p00002OV0hFAAT"
+      },
+      "Name": "Express Logistics and Transport"
+    },
+    {
+      "attributes": {
+        "type": "Account",
+        "url": "/services/data/v46.0/sobjects/Account/0012p00002OV0hGAAT"
+      },
+      "Name": "University of Arizona"
+    },
+    {
+      "attributes": {
+        "type": "Account",
+        "url": "/services/data/v46.0/sobjects/Account/0012p00002OV0hEAAT"
+      },
+      "Name": "United Oil & Gas Corp."
+    },
+    {
+      "attributes": {
+        "type": "Account",
+        "url": "/services/data/v46.0/sobjects/Account/0012p00002OV0hKAAT"
+      },
+      "Name": "sForce"
+    }
+  ]
+}
