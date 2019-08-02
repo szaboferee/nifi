@@ -35,9 +35,11 @@ import org.apache.nifi.processor.exception.ProcessException;
 import org.apache.nifi.processors.salesforce.controllers.SalesForceAuthService;
 
 import okhttp3.HttpUrl;
+import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.OkHttpClient.Builder;
 import okhttp3.Request;
+import okhttp3.RequestBody;
 import okhttp3.Response;
 
 public abstract class AbstractSalesForceProcessor extends AbstractProcessor {
@@ -81,12 +83,11 @@ public abstract class AbstractSalesForceProcessor extends AbstractProcessor {
     authService = context.getProperty(AUTH_SERVICE).asControllerService(SalesForceAuthService.class);
   }
 
-  String doGetRequest(String url) {
+  protected String doGetRequest(String url) {
     return doGetRequest(url, Collections.emptyMap());
   }
 
-  String doGetRequest(String url, Map<String, String> queryParams) {
-
+  protected String doGetRequest(String url, Map<String, String> queryParams) {
     OkHttpClient client = new Builder().build();
 
     try (Response response = client.newCall(buildGetRequest(url, queryParams)).execute()) {
@@ -97,11 +98,37 @@ public abstract class AbstractSalesForceProcessor extends AbstractProcessor {
           return handleResponse(response2);
         }
       }
+
+      // TODO handle limit exceeded error
       return handleResponse(response);
     } catch (Exception e) {
       throw new ProcessException("Error while handling Response ", e);
     }
   }
+
+  protected String doPostRequest(String url, String body) {
+    return doPostRequest(url, Collections.emptyMap(), body);
+  }
+
+  protected String doPostRequest(String url, Map<String, String> queryParams, String body) {
+    OkHttpClient client = new Builder().build();
+
+    try (Response response = client.newCall(buildPostRequest(url, queryParams, body)).execute()) {
+      getLogger().error("Processor response: " + response);
+      if (response.code() == 401) {
+        authService.renew();
+        try (Response response2 = client.newCall(buildPostRequest(url, queryParams, body)).execute()) {
+          return handleResponse(response2);
+        }
+      }
+
+      // TODO handle limit exceeded error
+      return handleResponse(response);
+    } catch (Exception e) {
+      throw new ProcessException("Error while handling Response ", e);
+    }
+  }
+
 
   private String handleResponse(Response response) throws IOException {
     if (response.code() != 200) {
@@ -111,6 +138,8 @@ public abstract class AbstractSalesForceProcessor extends AbstractProcessor {
         " Body: " + (response.body() == null ? null : response.body().string())
       );
     }
+
+    //TODO failure relationship
     return Objects.requireNonNull(response.body()).string();
   }
 
@@ -128,6 +157,20 @@ public abstract class AbstractSalesForceProcessor extends AbstractProcessor {
       .build();
   }
 
+  private Request buildPostRequest(String url, Map<String, String> queryParams, String body) {
+    HttpUrl.Builder builder = HttpUrl.get(getUrl(url)).newBuilder();
+    queryParams.forEach(builder::addQueryParameter);
+    HttpUrl httpUrl = builder.build();
+
+    getLogger().debug("Salesforce url called: {}", new Object[]{httpUrl.toString()});
+
+    return new Request.Builder()
+      .url(httpUrl)
+      .addHeader("Authorization", "Bearer " + getToken())
+      .post(RequestBody.create(MediaType.get("application/json"), body))
+      .build();
+  }
+
   private String getToken() {
     return authService.getToken();
   }
@@ -138,5 +181,9 @@ public abstract class AbstractSalesForceProcessor extends AbstractProcessor {
 
   String getVersionedPath(String version, String url) {
     return "/services/data/" + version + url;
+  }
+
+  String getVersionedAsyncPath(String version, String url) {
+    return "/services/async/" + version + url;
   }
 }

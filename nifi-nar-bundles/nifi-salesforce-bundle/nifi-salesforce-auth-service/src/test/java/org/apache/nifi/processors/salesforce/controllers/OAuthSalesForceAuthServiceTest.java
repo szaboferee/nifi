@@ -42,6 +42,7 @@ public class OAuthSalesForceAuthServiceTest {
   private static final String TEST_ACCESS_TOKEN2 = "myToken2";
   private MockWebServer mockWebServer;
   private MockConfigurationContext context;
+  private OAuthSalesForceAuthService service;
 
 
   @Before
@@ -53,17 +54,17 @@ public class OAuthSalesForceAuthServiceTest {
     HashMap<PropertyDescriptor, String> properties = new HashMap<>();
     properties.put(OAuthSalesForceAuthService.LOGIN_URL, loginUrl);
     context = new MockConfigurationContext(properties, null);
+    service = new OAuthSalesForceAuthService();
+    MockControllerServiceInitializationContext initializationContext = new MockControllerServiceInitializationContext(service, "mock-service");
+    service.initialize(initializationContext);
+
   }
 
   @Test
   public void testSuccessfulAuthHappensOnlyOnce() throws IOException, InitializationException {
     enqueueResponse("success.json", 200);
 
-    OAuthSalesForceAuthService service = new OAuthSalesForceAuthService();
-    MockControllerServiceInitializationContext initializationContext = new MockControllerServiceInitializationContext(service, "mock-service");
-    service.initialize(initializationContext);
     service.onEnabled(context);
-
 
     String instanceUrl = service.getInstanceUrl();
     String instanceUrl2 = service.getInstanceUrl();
@@ -71,20 +72,17 @@ public class OAuthSalesForceAuthServiceTest {
     String token2 = service.getToken();
     int requestCount = mockWebServer.getRequestCount();
 
-    assertEquals(instanceUrl, TEST_INSTANCE_URL);
-    assertEquals(instanceUrl2, TEST_INSTANCE_URL);
-    assertEquals(token, TEST_ACCESS_TOKEN);
-    assertEquals(token2, TEST_ACCESS_TOKEN);
-    assertEquals(requestCount, 1);
+    assertEquals(TEST_INSTANCE_URL, instanceUrl);
+    assertEquals(TEST_INSTANCE_URL, instanceUrl2);
+    assertEquals(TEST_ACCESS_TOKEN, token);
+    assertEquals(TEST_ACCESS_TOKEN, token2);
+    assertEquals(1, requestCount);
   }
 
   @Test(expected = RuntimeException.class)
   public void testInvalid() throws IOException, InitializationException {
     enqueueResponse("invalid.json", 400);
 
-    OAuthSalesForceAuthService service = new OAuthSalesForceAuthService();
-    MockControllerServiceInitializationContext initializationContext = new MockControllerServiceInitializationContext(service, "mock-service");
-    service.initialize(initializationContext);
     service.onEnabled(context);
   }
 
@@ -94,9 +92,6 @@ public class OAuthSalesForceAuthServiceTest {
     enqueueResponse("success.json", 200);
     enqueueResponse("success2.json", 200);
 
-    OAuthSalesForceAuthService service = new OAuthSalesForceAuthService();
-    MockControllerServiceInitializationContext initializationContext = new MockControllerServiceInitializationContext(service, "mock-service");
-    service.initialize(initializationContext);
     service.onEnabled(context);
 
     String instanceUrl = service.getInstanceUrl();
@@ -106,11 +101,11 @@ public class OAuthSalesForceAuthServiceTest {
     String token2 = service.getToken();
     int requestCount = mockWebServer.getRequestCount();
 
-    assertEquals(instanceUrl, TEST_INSTANCE_URL);
-    assertEquals(instanceUrl2, TEST_INSTANCE_URL2);
-    assertEquals(token, TEST_ACCESS_TOKEN);
-    assertEquals(token2, TEST_ACCESS_TOKEN2);
-    assertEquals(requestCount, 2);
+    assertEquals(TEST_INSTANCE_URL, instanceUrl);
+    assertEquals(TEST_INSTANCE_URL2, instanceUrl2);
+    assertEquals(TEST_ACCESS_TOKEN, token);
+    assertEquals(TEST_ACCESS_TOKEN2, token2);
+    assertEquals(2, requestCount);
   }
 
 

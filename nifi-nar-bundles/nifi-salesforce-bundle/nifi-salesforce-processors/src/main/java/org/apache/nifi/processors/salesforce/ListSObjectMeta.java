@@ -26,6 +26,8 @@ import javax.json.JsonValue;
 
 import org.apache.nifi.annotation.behavior.InputRequirement;
 import org.apache.nifi.annotation.behavior.InputRequirement.Requirement;
+import org.apache.nifi.annotation.behavior.WritesAttribute;
+import org.apache.nifi.annotation.behavior.WritesAttributes;
 import org.apache.nifi.annotation.configuration.DefaultSchedule;
 import org.apache.nifi.annotation.documentation.Tags;
 import org.apache.nifi.flowfile.FlowFile;
@@ -37,6 +39,9 @@ import org.apache.nifi.scheduling.SchedulingStrategy;
 @InputRequirement(Requirement.INPUT_ALLOWED)
 @DefaultSchedule(strategy = SchedulingStrategy.TIMER_DRIVEN, period = "1 day")
 @Tags({"salesforce", "sobject"})
+@WritesAttributes(
+  @WritesAttribute(attribute = "salesforce.attributes.url", description = "TBD")
+)
 public class ListSObjectMeta extends AbstractSalesForceProcessor {
   @Override
   public void onTrigger(ProcessContext context, ProcessSession session) throws ProcessException {

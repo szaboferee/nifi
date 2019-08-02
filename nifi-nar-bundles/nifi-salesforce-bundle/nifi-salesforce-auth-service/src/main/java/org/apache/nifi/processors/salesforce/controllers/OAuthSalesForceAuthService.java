@@ -31,7 +31,6 @@ import org.apache.nifi.components.PropertyDescriptor.Builder;
 import org.apache.nifi.components.Validator;
 import org.apache.nifi.controller.AbstractControllerService;
 import org.apache.nifi.controller.ConfigurationContext;
-import org.apache.nifi.processor.exception.ProcessException;
 
 import okhttp3.FormBody;
 import okhttp3.OkHttpClient;
@@ -148,7 +147,7 @@ public class OAuthSalesForceAuthService extends AbstractControllerService implem
       getLogger().debug("Calling login URL: " + request.url());
       try (Response response = okHttpClient.newCall(request).execute()) {
         getLogger().error("auth response: " + response);
-        if (response.code() == 200) {
+        if (response.isSuccessful()) {
           if (response.body() != null) {
             String responseString = response.body().string();
             try (JsonReader reader = Json.createReader(new StringReader(responseString))) {
@@ -157,16 +156,14 @@ public class OAuthSalesForceAuthService extends AbstractControllerService implem
               instanceUrl = jsonObject.getString("instance_url");
             }
           }
-        } else if (response.code() == 400) {
-          if (response.body() != null) {
-            throw new RuntimeException("Authentication error: " + response.body().string());
-          }
+        } else if (response.code() == 400 || response.code() == 401) {
+          throw new RuntimeException("Authentication error: " + (response.body() == null ? "Unknown" : response.body().string()));
         } else {
           throw new RuntimeException("Invalid response: " + response.toString());
         }
 
       } catch (IOException e) {
-        throw new ProcessException("Error happened during token request.", e);
+        throw new RuntimeException("Error happened during token request.", e);
       }
     }
 }
