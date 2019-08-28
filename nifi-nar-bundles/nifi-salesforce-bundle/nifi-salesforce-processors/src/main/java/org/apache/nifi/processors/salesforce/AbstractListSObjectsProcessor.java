@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.nifi.annotation.behavior.Stateful;
+import org.apache.nifi.annotation.behavior.TriggerSerially;
 import org.apache.nifi.annotation.configuration.DefaultSchedule;
 import org.apache.nifi.components.PropertyDescriptor;
 import org.apache.nifi.components.Validator;
@@ -37,44 +38,44 @@ import org.apache.nifi.scheduling.SchedulingStrategy;
 
 @Stateful(scopes = Scope.CLUSTER, description = "TODO")
 @DefaultSchedule(strategy = SchedulingStrategy.TIMER_DRIVEN, period = "1 hour")
+@TriggerSerially
 public abstract class AbstractListSObjectsProcessor extends AbstractSalesForceProcessor {
 
   static final PropertyDescriptor SOBJECT_NAME = new PropertyDescriptor.Builder()
-    .name("sobject-name")
-    .displayName("SObject Name")
-    .description("")
-    .required(true)
-    .addValidator(StandardValidators.NON_BLANK_VALIDATOR)
-    .build();
+      .name("sobject-name")
+      .displayName("SObject Name")
+      .description("")
+      .required(true)
+      .addValidator(StandardValidators.NON_BLANK_VALIDATOR)
+      .build();
 
   static final PropertyDescriptor START_DATE = new PropertyDescriptor.Builder()
-    .name("start-date")
-    .displayName("Start Date")
-    .addValidator(Validator.VALID)
-    .required(false)
-    .build();
+      .name("start-date")
+      .displayName("Start Date")
+      .addValidator(Validator.VALID)
+      .required(false)
+      .build();
 
   static final PropertyDescriptor END_DATE = new PropertyDescriptor.Builder()
-    .name("end-date")
-    .displayName("End Date")
-    .required(false)
-    .addValidator(Validator.VALID)
-    .build();
+      .name("end-date")
+      .displayName("End Date")
+      .required(false)
+      .addValidator(Validator.VALID)
+      .build();
 
   static final PropertyDescriptor POLL = new PropertyDescriptor.Builder()
-    .name("poll")
-    .displayName("Poll")
-    .required(true)
-    .allowableValues("true", "false")
-    .defaultValue("false")
-    .build();
+      .name("poll")
+      .displayName("Poll")
+      .required(true)
+      .allowableValues("true", "false")
+      .defaultValue("false")
+      .build();
 
   static final PropertyDescriptor POLL_INTERVAL = new PropertyDescriptor.Builder()
-    .name("poll-interval")
-    .displayName("Poll Interval")
-    .required(false)
-    .build();
-
+      .name("poll-interval")
+      .displayName("Poll Interval")
+      .required(false)
+      .build();
 
 
   protected abstract String processResult(ProcessSession session, String sObjectName, String objectUrlPath, String result);
@@ -90,18 +91,22 @@ public abstract class AbstractListSObjectsProcessor extends AbstractSalesForcePr
 
   @Override
   public void onTrigger(ProcessContext context, ProcessSession session) throws ProcessException {
-
-
-    StateManager stateManager = context.getStateManager();
-    try {
-      String lastDate = stateManager.getState(Scope.CLUSTER).get("lastDate");
-    } catch (IOException e) {
-      e.printStackTrace();
+    boolean poll = context.getProperty(POLL).asBoolean();
+    if (poll) {
+      try {
+        restoreState(context);
+      } catch (IOException e) {
+        getLogger().error("Failed to restore processor state; yielding", e);
+        context.yield();
+        return;
+      }
+    } else {
     }
-    String sObjectName = context.getProperty(SOBJECT_NAME).getValue();
-    String version = context.getProperty(API_VERSION).getValue();
+
     String startDate = context.getProperty(START_DATE).getValue();
     String endDate = context.getProperty(END_DATE).getValue();
+    String sObjectName = context.getProperty(SOBJECT_NAME).getValue();
+    String version = context.getProperty(API_VERSION).getValue();
 
 
     String path = getVersionedPath(version, "/sobjects/" + sObjectName + getListType());
@@ -112,8 +117,32 @@ public abstract class AbstractListSObjectsProcessor extends AbstractSalesForcePr
     queryParams.put("end", endDate);
     String result = doGetRequest(path, queryParams);
 
+    String lastDateCovered = processResult(session, sObjectName, objectUrlPath, result);
+    persistState(context, lastDateCovered);
+  }
 
+  private void persistState(ProcessContext context, String lastDateCovered) {
+    try {
+      Map<String, String> state = new HashMap<>();
+      state.put("lastDate", lastDateCovered);
+      context.getStateManager().setState(state, Scope.CLUSTER);
+    } catch (IOException e) {
+      getLogger().error("Failed to save cluster-wide state. If NiFi is restarted, data duplication may occur", e);
+    }
+  }
 
-    processResult(session, sObjectName, objectUrlPath, result);
+  private String restoreState(ProcessContext context) throws IOException {
+    StateManager stateManager = context.getStateManager();
+    String lastDate = stateManager.getState(Scope.CLUSTER).get("lastDate");
+    if (lastDate == null) {
+      String startDate = context.getProperty(START_DATE).getValue();
+      if (startDate == null) {
+        lastDate = "aaa";
+      } else {
+        lastDate = startDate;
+      }
+    }
+
+    return lastDate;
   }
 }

@@ -42,7 +42,7 @@ public class ListUpdatedSObjectsTest extends SalesForceProcessorTestBase {
     testRunner.setProperty(ListUpdatedSObjects.END_DATE, "2019-10-15T00:00:00+00:00");
 
     testRunner.run(2);
-    testRunner.assertTransferCount(ListUpdatedSObjects.REL_SUCCESS, 3);
+    testRunner.assertTransferCount(ListUpdatedSObjects.REL_SUCCESS, 6);
 
     MockFlowFile flowFile = testRunner.getFlowFilesForRelationship(ListUpdatedSObjects.REL_SUCCESS).get(0);
 
