@@ -53,6 +53,10 @@ public class OAuthSalesForceAuthServiceTest {
 
     HashMap<PropertyDescriptor, String> properties = new HashMap<>();
     properties.put(OAuthSalesForceAuthService.LOGIN_URL, loginUrl);
+    properties.put(OAuthSalesForceAuthService.CLIENT_ID,"test_id");
+    properties.put(OAuthSalesForceAuthService.CLIENT_SECRET,"test_secret");
+    properties.put(OAuthSalesForceAuthService.USERNAME,"test_username");
+    properties.put(OAuthSalesForceAuthService.PASSWORD,"test_password");
     context = new MockConfigurationContext(properties, null);
     service = new OAuthSalesForceAuthService();
     MockControllerServiceInitializationContext initializationContext = new MockControllerServiceInitializationContext(service, "mock-service");

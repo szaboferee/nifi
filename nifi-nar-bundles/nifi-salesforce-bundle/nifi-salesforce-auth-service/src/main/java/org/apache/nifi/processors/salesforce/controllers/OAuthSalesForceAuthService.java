@@ -43,7 +43,6 @@ public class OAuthSalesForceAuthService extends AbstractControllerService implem
     .name("login-url")
     .displayName("Login Url")
     .description("")
-    .defaultValue("https://login.salesforce.com")
     .addValidator(Validator.VALID)
     .required(true)
     .build();
@@ -52,7 +51,6 @@ public class OAuthSalesForceAuthService extends AbstractControllerService implem
     .name("username")
     .displayName("Username")
     .description("")
-    .defaultValue("nifi@example.com")
     .addValidator(Validator.VALID)
     .required(true)
     .build();
@@ -61,7 +59,6 @@ public class OAuthSalesForceAuthService extends AbstractControllerService implem
     .name("password")
     .displayName("Password")
     .description("")
-    .defaultValue("asdf1234pVAOxKmCb75tW2Jg5WOEag5Jb")
     .addValidator(Validator.VALID)
     .required(true)
     .sensitive(true)
@@ -71,7 +68,6 @@ public class OAuthSalesForceAuthService extends AbstractControllerService implem
     .name("client-id")
     .displayName("Client Id")
     .description("")
-    .defaultValue("3MVG96_7YM2sI9wR1i6b.qje2O5ugu96Okxs.C2LEiqpL6kRm1orfxl6dRFvA3hgXor2.JQ3ja3Ft0g4YC8Yl")
     .required(true)
     .addValidator(Validator.VALID)
     .sensitive(true)
@@ -82,7 +78,6 @@ public class OAuthSalesForceAuthService extends AbstractControllerService implem
     .displayName("Client Secret")
     .description("")
     .addValidator(Validator.VALID)
-    .defaultValue("B169AF8063DD40AAF280D62C2CD624A98A959E432F5327904A44341AF2C6511A")
     .required(true)
     .sensitive(true)
     .build();
@@ -146,7 +141,7 @@ public class OAuthSalesForceAuthService extends AbstractControllerService implem
 
       getLogger().debug("Calling login URL: " + request.url());
       try (Response response = okHttpClient.newCall(request).execute()) {
-        getLogger().error("auth response: " + response);
+        getLogger().trace("auth response: " + response);
         if (response.isSuccessful()) {
           if (response.body() != null) {
             String responseString = response.body().string();

@@ -19,10 +19,12 @@ package org.apache.nifi.processors.salesforce;
 import java.io.StringReader;
 
 import javax.json.Json;
+import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
 
 import org.apache.nifi.annotation.configuration.DefaultSchedule;
+import org.apache.nifi.annotation.documentation.CapabilityDescription;
 import org.apache.nifi.annotation.documentation.Tags;
 import org.apache.nifi.flowfile.FlowFile;
 import org.apache.nifi.processor.ProcessSession;
@@ -31,6 +33,7 @@ import org.apache.nifi.scheduling.SchedulingStrategy;
 
 @DefaultSchedule(strategy = SchedulingStrategy.TIMER_DRIVEN, period = "1 day")
 @Tags({"salesforce", "sobject"})
+@CapabilityDescription("")
 public class ListDeletedSObjects extends AbstractListSObjectsProcessor {
 
   @Override
@@ -42,16 +45,15 @@ public class ListDeletedSObjects extends AbstractListSObjectsProcessor {
   protected String processResult(ProcessSession session, String sObjectName, String objectUrlPath, String result) {
     try (JsonReader reader = Json.createReader(new StringReader(result))) {
       JsonObject jsonObject = reader.readObject();
-      jsonObject.getJsonArray("deletedRecords").forEach(jsonValue -> {
-        FlowFile flowFile = session.create();
-        session.putAttribute(flowFile, "salesforce.attributes.type", sObjectName);
-        JsonObject deletedObject = (JsonObject) jsonValue;
-        session.putAttribute(flowFile, "salesforce.attributes.url", objectUrlPath + deletedObject.getString("id"));
-        session.putAttribute(flowFile, "salesforce.attributes.deletedDate", deletedObject.getString("deletedDate"));
-        session.transfer(flowFile, REL_SUCCESS);
-      });
+      JsonArray deletedRecords = jsonObject.getJsonArray("deletedRecords");
+      String latestDateCovered = jsonObject.getString("latestDateCovered");
+      FlowFile flowFile = session.create();
+      session.putAttribute(flowFile, "salesforce.attributes.type", sObjectName);
+      session.putAttribute(flowFile, "salesforce.lastDateCovered", latestDateCovered);
+      session.write(flowFile, out -> out.write(deletedRecords.toString().getBytes()));
+      session.transfer(flowFile, REL_SUCCESS);
 
-      return jsonObject.getString("latestDateCovered");
+      return latestDateCovered;
     }
   }
 }

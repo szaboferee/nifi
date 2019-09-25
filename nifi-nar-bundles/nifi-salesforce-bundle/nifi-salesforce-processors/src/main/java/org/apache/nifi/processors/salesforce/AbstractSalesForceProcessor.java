@@ -28,6 +28,7 @@ import java.util.Set;
 import org.apache.nifi.annotation.lifecycle.OnScheduled;
 import org.apache.nifi.components.PropertyDescriptor;
 import org.apache.nifi.components.Validator;
+import org.apache.nifi.expression.ExpressionLanguageScope;
 import org.apache.nifi.processor.AbstractProcessor;
 import org.apache.nifi.processor.ProcessContext;
 import org.apache.nifi.processor.Relationship;
@@ -57,6 +58,7 @@ public abstract class AbstractSalesForceProcessor extends AbstractProcessor {
     .description("")
     .required(true)
     .addValidator(Validator.VALID)
+      .expressionLanguageSupported(ExpressionLanguageScope.VARIABLE_REGISTRY)
     .defaultValue("v46.0")
     .build();
 
@@ -91,7 +93,7 @@ public abstract class AbstractSalesForceProcessor extends AbstractProcessor {
     OkHttpClient client = new Builder().build();
 
     try (Response response = client.newCall(buildGetRequest(url, queryParams)).execute()) {
-      getLogger().error("Processor response: " + response);
+      getLogger().trace("Processor response: " + response);
       if (response.code() == 401) {
         authService.renew();
         try (Response response2 = client.newCall(buildGetRequest(url, queryParams)).execute()) {
@@ -114,7 +116,7 @@ public abstract class AbstractSalesForceProcessor extends AbstractProcessor {
     OkHttpClient client = new Builder().build();
 
     try (Response response = client.newCall(buildPostRequest(url, queryParams, body)).execute()) {
-      getLogger().error("Processor response: " + response);
+      getLogger().trace("Processor response: " + response);
       if (response.code() == 401) {
         authService.renew();
         try (Response response2 = client.newCall(buildPostRequest(url, queryParams, body)).execute()) {

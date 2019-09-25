@@ -30,6 +30,7 @@ import org.apache.nifi.annotation.behavior.WritesAttribute;
 import org.apache.nifi.annotation.behavior.WritesAttributes;
 import org.apache.nifi.annotation.configuration.DefaultSchedule;
 import org.apache.nifi.annotation.documentation.Tags;
+import org.apache.nifi.annotation.lifecycle.OnScheduled;
 import org.apache.nifi.flowfile.FlowFile;
 import org.apache.nifi.processor.ProcessContext;
 import org.apache.nifi.processor.ProcessSession;
@@ -43,11 +44,18 @@ import org.apache.nifi.scheduling.SchedulingStrategy;
   @WritesAttribute(attribute = "salesforce.attributes.url", description = "TBD")
 )
 public class ListSObjectMeta extends AbstractSalesForceProcessor {
+
+  private String path;
+
+  @OnScheduled
+  public void setup(ProcessContext context) {
+    String version = context.getProperty(API_VERSION).evaluateAttributeExpressions().getValue();
+    path = getVersionedPath(version, "/sobjects");
+  }
+
   @Override
   public void onTrigger(ProcessContext context, ProcessSession session) throws ProcessException {
-    String version = context.getProperty(API_VERSION).getValue();
-    String url = getVersionedPath(version, "/sobjects");
-    String response = doGetRequest(url);
+    String response = doGetRequest(path);
 
     try (JsonReader reader = Json.createReader(new StringReader(response))) {
       JsonArray sobjects = reader.readObject().getJsonArray("sobjects");

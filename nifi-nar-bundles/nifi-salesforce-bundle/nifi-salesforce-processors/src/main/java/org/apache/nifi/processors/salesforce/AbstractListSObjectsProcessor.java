@@ -26,6 +26,7 @@ import java.util.Map;
 import org.apache.nifi.annotation.behavior.Stateful;
 import org.apache.nifi.annotation.behavior.TriggerSerially;
 import org.apache.nifi.annotation.configuration.DefaultSchedule;
+import org.apache.nifi.annotation.lifecycle.OnScheduled;
 import org.apache.nifi.components.PropertyDescriptor;
 import org.apache.nifi.components.Validator;
 import org.apache.nifi.components.state.Scope;
@@ -36,7 +37,7 @@ import org.apache.nifi.processor.exception.ProcessException;
 import org.apache.nifi.processor.util.StandardValidators;
 import org.apache.nifi.scheduling.SchedulingStrategy;
 
-@Stateful(scopes = Scope.CLUSTER, description = "TODO")
+@Stateful(scopes = Scope.CLUSTER, description = "The processor holds the state")
 @DefaultSchedule(strategy = SchedulingStrategy.TIMER_DRIVEN, period = "1 hour")
 @TriggerSerially
 public abstract class AbstractListSObjectsProcessor extends AbstractSalesForceProcessor {
@@ -52,6 +53,7 @@ public abstract class AbstractListSObjectsProcessor extends AbstractSalesForcePr
   static final PropertyDescriptor START_DATE = new PropertyDescriptor.Builder()
       .name("start-date")
       .displayName("Start Date")
+      .description("Date to start processing from in the following format:  . example: 2019-08-19T15:51:48+1:00")
       .addValidator(Validator.VALID)
       .required(false)
       .build();
@@ -76,11 +78,23 @@ public abstract class AbstractListSObjectsProcessor extends AbstractSalesForcePr
       .displayName("Poll Interval")
       .required(false)
       .build();
+  private String path;
+  private String objectUrlPath;
+  private String sObjectName;
 
 
   protected abstract String processResult(ProcessSession session, String sObjectName, String objectUrlPath, String result);
 
   protected abstract String getListType();
+
+  @OnScheduled
+  public void setup(ProcessContext context) {
+    String version = context.getProperty(API_VERSION).evaluateAttributeExpressions().getValue();
+    sObjectName = context.getProperty(SOBJECT_NAME).getValue();
+    path = getVersionedPath(version, "/sobjects/" + sObjectName + getListType());
+    objectUrlPath = getVersionedPath(version, "/sobjects/" + sObjectName + "/");
+
+  }
 
   @Override
   protected List<PropertyDescriptor> getSupportedPropertyDescriptors() {
@@ -105,12 +119,7 @@ public abstract class AbstractListSObjectsProcessor extends AbstractSalesForcePr
 
     String startDate = context.getProperty(START_DATE).getValue();
     String endDate = context.getProperty(END_DATE).getValue();
-    String sObjectName = context.getProperty(SOBJECT_NAME).getValue();
-    String version = context.getProperty(API_VERSION).getValue();
 
-
-    String path = getVersionedPath(version, "/sobjects/" + sObjectName + getListType());
-    String objectUrlPath = getVersionedPath(version, "/sobjects/" + sObjectName + "/");
     Map<String, String> queryParams = new HashMap<>();
 
     queryParams.put("start", startDate);

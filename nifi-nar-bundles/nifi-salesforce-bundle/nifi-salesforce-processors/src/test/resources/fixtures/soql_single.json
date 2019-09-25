@@ -5,10 +5,7 @@
     {
       "attributes": {
         "type": "Account",
-        "url": "/services/data/v46.0/sobjects/Account/0012p00002OV0hJAAT",
-        "someNumber": 10,
-        "someArray": [1,2],
-        "someObject": {"key": "value"}
+        "url": "/services/data/v46.0/sobjects/Account/0012p00002OV0hJAAT"
       },
       "Name": "GenePoint"
     },

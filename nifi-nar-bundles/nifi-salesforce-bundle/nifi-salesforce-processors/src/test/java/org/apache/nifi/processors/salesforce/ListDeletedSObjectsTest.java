@@ -42,15 +42,14 @@ public class ListDeletedSObjectsTest extends SalesForceProcessorTestBase {
     testRunner.setProperty(ListUpdatedSObjects.START_DATE, "2019-06-15T00:00:00+00:00");
     testRunner.setProperty(ListUpdatedSObjects.END_DATE, "2019-10-15T00:00:00+00:00");
 
-    testRunner.run(2);
+    testRunner.run(1);
     testRunner.assertTransferCount(ListUpdatedSObjects.REL_SUCCESS, 1);
 
     MockFlowFile flowFile = testRunner.getFlowFilesForRelationship(ListUpdatedSObjects.REL_SUCCESS).get(0);
 
     flowFile.assertAttributeEquals("salesforce.attributes.type", "Account");
-    flowFile.assertAttributeEquals("salesforce.attributes.url", "/services/data/v46.0/sobjects/Account/0012p00002NlZS3AAN");
-    flowFile.assertAttributeEquals("salesforce.attributes.deletedDate", "2019-06-17T11:49:56.000+0000");
-    testRunner.getStateManager().assertStateEquals("lastDateCovered", "",  Scope.CLUSTER );
+    flowFile.assertAttributeEquals("salesforce.lastDateCovered", "2019-07-12T10:39:00.000+0000");
+    testRunner.getStateManager().assertStateEquals("lastDate", "2019-07-12T10:39:00.000+0000",  Scope.CLUSTER );
   }
 
   @Override
