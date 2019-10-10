@@ -43,7 +43,6 @@ public class OAuthSalesForceAuthService extends AbstractControllerService implem
     .name("login-url")
     .displayName("Login Url")
     .description("")
-    .addValidator(Validator.VALID)
     .required(true)
     .build();
 
@@ -51,7 +50,6 @@ public class OAuthSalesForceAuthService extends AbstractControllerService implem
     .name("username")
     .displayName("Username")
     .description("")
-    .addValidator(Validator.VALID)
     .required(true)
     .build();
 
@@ -59,7 +57,6 @@ public class OAuthSalesForceAuthService extends AbstractControllerService implem
     .name("password")
     .displayName("Password")
     .description("")
-    .addValidator(Validator.VALID)
     .required(true)
     .sensitive(true)
     .build();
@@ -69,7 +66,6 @@ public class OAuthSalesForceAuthService extends AbstractControllerService implem
     .displayName("Client Id")
     .description("")
     .required(true)
-    .addValidator(Validator.VALID)
     .sensitive(true)
     .build();
 
@@ -77,7 +73,6 @@ public class OAuthSalesForceAuthService extends AbstractControllerService implem
     .name("client-secret")
     .displayName("Client Secret")
     .description("")
-    .addValidator(Validator.VALID)
     .required(true)
     .sensitive(true)
     .build();

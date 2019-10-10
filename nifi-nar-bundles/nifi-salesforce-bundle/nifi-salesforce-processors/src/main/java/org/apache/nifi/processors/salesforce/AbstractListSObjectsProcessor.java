@@ -17,11 +17,17 @@
 package org.apache.nifi.processors.salesforce;
 
 import java.io.IOException;
+import java.time.Clock;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.nifi.annotation.behavior.Stateful;
 import org.apache.nifi.annotation.behavior.TriggerSerially;
@@ -78,10 +84,20 @@ public abstract class AbstractListSObjectsProcessor extends AbstractSalesForcePr
       .displayName("Poll Interval")
       .required(false)
       .build();
+
   private String path;
   private String objectUrlPath;
   private String sObjectName;
+  private DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssxxxxx").withZone(ZoneId.of("UTC"));
+  private Clock clock;
 
+  public AbstractListSObjectsProcessor() {
+    this(Clock.systemUTC());
+  }
+
+  public AbstractListSObjectsProcessor(Clock clock) {
+    this.clock = clock;
+  }
 
   protected abstract String processResult(ProcessSession session, String sObjectName, String objectUrlPath, String result);
 
@@ -106,24 +122,36 @@ public abstract class AbstractListSObjectsProcessor extends AbstractSalesForcePr
   @Override
   public void onTrigger(ProcessContext context, ProcessSession session) throws ProcessException {
     boolean poll = context.getProperty(POLL).asBoolean();
+    String startDateString;
+    String endDateString;
     if (poll) {
       try {
-        restoreState(context);
+        OffsetDateTime startDateTime = getStartDate(context);
+        OffsetDateTime endDateTime = startDateTime.plusDays(30);
+        startDateString = startDateTime.format(formatter);
+        endDateString = endDateTime.format(formatter);
       } catch (IOException e) {
         getLogger().error("Failed to restore processor state; yielding", e);
         context.yield();
         return;
       }
     } else {
+      OffsetDateTime startDateTime = Optional.ofNullable(context.getProperty(START_DATE).getValue())
+          .map(date -> OffsetDateTime.parse(date, formatter))
+          .orElseGet(() -> clock.instant().atOffset(ZoneOffset.UTC));
+      startDateString = startDateTime.format(formatter);
+      OffsetDateTime endDateTime = Optional.ofNullable(context.getProperty(END_DATE).getValue())
+          .map(date -> OffsetDateTime.parse(date, formatter))
+          .orElseGet(() -> startDateTime.plusDays(30));
+
+      endDateString = endDateTime.format(formatter);
     }
 
-    String startDate = context.getProperty(START_DATE).getValue();
-    String endDate = context.getProperty(END_DATE).getValue();
 
     Map<String, String> queryParams = new HashMap<>();
 
-    queryParams.put("start", startDate);
-    queryParams.put("end", endDate);
+    queryParams.put("start", startDateString);
+    queryParams.put("end", endDateString);
     String result = doGetRequest(path, queryParams);
 
     String lastDateCovered = processResult(session, sObjectName, objectUrlPath, result);
@@ -140,18 +168,21 @@ public abstract class AbstractListSObjectsProcessor extends AbstractSalesForcePr
     }
   }
 
-  private String restoreState(ProcessContext context) throws IOException {
+  private OffsetDateTime getStartDate(ProcessContext context) throws IOException {
+    OffsetDateTime resultDate;
     StateManager stateManager = context.getStateManager();
     String lastDate = stateManager.getState(Scope.CLUSTER).get("lastDate");
     if (lastDate == null) {
       String startDate = context.getProperty(START_DATE).getValue();
       if (startDate == null) {
-        lastDate = "aaa";
+        resultDate = clock.instant().atOffset(ZoneOffset.UTC);
       } else {
-        lastDate = startDate;
+        resultDate = OffsetDateTime.parse(startDate, formatter);
       }
+    } else {
+      resultDate = OffsetDateTime.parse(lastDate, formatter);
     }
 
-    return lastDate;
+    return resultDate;
   }
 }

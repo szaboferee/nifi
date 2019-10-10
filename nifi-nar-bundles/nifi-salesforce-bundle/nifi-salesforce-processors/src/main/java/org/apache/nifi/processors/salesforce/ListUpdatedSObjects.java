@@ -17,6 +17,7 @@
 package org.apache.nifi.processors.salesforce;
 
 import java.io.StringReader;
+import java.time.Clock;
 
 import javax.json.Json;
 import javax.json.JsonObject;
@@ -33,6 +34,13 @@ import org.apache.nifi.scheduling.SchedulingStrategy;
 @Tags({"salesforce", "sobject"})
 public class ListUpdatedSObjects extends AbstractListSObjectsProcessor {
 
+  public ListUpdatedSObjects() {
+  super();
+  }
+
+  public ListUpdatedSObjects(Clock clock) {
+    super(clock);
+  }
 
   @Override
   protected String getListType() {

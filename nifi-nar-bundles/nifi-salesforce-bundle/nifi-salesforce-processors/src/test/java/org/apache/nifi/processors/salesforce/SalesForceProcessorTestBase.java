@@ -25,6 +25,7 @@ import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Objects;
 
+import org.apache.nifi.processor.Processor;
 import org.apache.nifi.processors.salesforce.controllers.SalesForceAuthService;
 import org.apache.nifi.reporting.InitializationException;
 import org.apache.nifi.util.TestRunner;
@@ -63,8 +64,17 @@ abstract public class SalesForceProcessorTestBase {
 
   }
 
+  void setupTestRunner(Processor processor) throws InitializationException {
+    testRunner = TestRunners.newTestRunner(processor);
+    configureTestRunner();
+  }
+
   void setupTestRunner(Class<? extends AbstractSalesForceProcessor> processorClass) throws InitializationException {
     testRunner = TestRunners.newTestRunner(processorClass);
+    configureTestRunner();
+  }
+
+  private void configureTestRunner() throws InitializationException {
     testRunner.addControllerService(MOCK_AUTH_SERVICE_ID, mockAuthService);
     testRunner.enableControllerService(mockAuthService);
     testRunner.setProperty(AbstractSalesForceProcessor.AUTH_SERVICE, MOCK_AUTH_SERVICE_ID);

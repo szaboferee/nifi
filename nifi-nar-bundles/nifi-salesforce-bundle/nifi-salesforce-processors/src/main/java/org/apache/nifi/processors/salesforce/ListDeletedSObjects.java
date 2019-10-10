@@ -17,6 +17,7 @@
 package org.apache.nifi.processors.salesforce;
 
 import java.io.StringReader;
+import java.time.Clock;
 
 import javax.json.Json;
 import javax.json.JsonArray;
@@ -33,8 +34,16 @@ import org.apache.nifi.scheduling.SchedulingStrategy;
 
 @DefaultSchedule(strategy = SchedulingStrategy.TIMER_DRIVEN, period = "1 day")
 @Tags({"salesforce", "sobject"})
-@CapabilityDescription("")
+@CapabilityDescription("TBD")
 public class ListDeletedSObjects extends AbstractListSObjectsProcessor {
+
+  public ListDeletedSObjects() {
+    super();
+  }
+
+  public ListDeletedSObjects(Clock clock) {
+    super(clock);
+  }
 
   @Override
   protected String getListType() {
